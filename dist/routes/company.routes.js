@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const company_controller_1 = require("../controllers/company.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+const companyController = new company_controller_1.CompanyController();
+router.get('/dashboard', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), companyController.getDashboard);
+router.put('/profile', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), companyController.updateProfile);
+router.get('/my-challenges', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), companyController.getMyChallenges);
+router.get('/submissions', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), companyController.getSubmissions);
+router.put('/submissions/:id/grade', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), companyController.gradeSubmission);
+router.get('/talents', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), companyController.searchTalents);
+exports.default = router;

@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const challenge_controller_1 = require("../controllers/challenge.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+const challengeController = new challenge_controller_1.ChallengeController();
+router.get('/', challengeController.getChallenges);
+router.get('/topics', challengeController.getTopics);
+router.get('/difficulty-levels', challengeController.getDifficultyLevels);
+router.get('/:id', challengeController.getChallengeById);
+router.post('/', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), challengeController.createChallenge);
+router.put('/:id', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA']), challengeController.updateChallenge);
+router.delete('/:id', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)(['EMPRESA', 'ADMIN']), challengeController.deleteChallenge);
+exports.default = router;
