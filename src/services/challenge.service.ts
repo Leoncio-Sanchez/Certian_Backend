@@ -1,4 +1,4 @@
-import { prisma } from '../config/prisma';
+﻿import { prisma } from '../config/prisma';
 
 export class ChallengeService {
   public async getAllChallenges(page: number = 1, limit: number = 10, search: string = '') {
@@ -48,6 +48,8 @@ export class ChallengeService {
         titulo: challengeData.titulo,
         descripcion_problema: challengeData.descripcion_problema,
         requisitos_entrega: challengeData.requisitos_entrega,
+        imagen_url: challengeData.imagen_url || null,
+        documento_url: challengeData.documento_url || null,
         estado: 'abierto'
       }
     });

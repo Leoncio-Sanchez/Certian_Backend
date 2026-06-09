@@ -1,8 +1,10 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import { ChallengeService } from '../services/challenge.service';
+import { StorageService } from '../services/storage.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 const challengeService = new ChallengeService();
+const storageService = new StorageService();
 
 export class ChallengeController {
   public async getChallenges(req: Request, res: Response): Promise<void> {
@@ -33,7 +35,26 @@ export class ChallengeController {
 
   public async createChallenge(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const newChallenge = await challengeService.createChallenge(req.user!.id, req.body);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      let imagen_url = '';
+      let documento_url = '';
+
+      if (files?.['imagen']) {
+        imagen_url = await storageService.uploadFile(files['imagen'][0], 'challenges/images');
+      }
+      if (files?.['documento']) {
+        documento_url = await storageService.uploadFile(files['documento'][0], 'challenges/docs');
+      }
+
+      const challengeData = {
+        ...req.body,
+        id_tema: Number(req.body.id_tema),
+        id_nivel_dificultad: Number(req.body.id_nivel_dificultad),
+        imagen_url,
+        documento_url
+      };
+
+      const newChallenge = await challengeService.createChallenge(req.user!.id, challengeData);
       res.status(201).json({ status: 'success', data: newChallenge });
     } catch (error: any) {
       res.status(500).json({ status: 'error', message: error.message });

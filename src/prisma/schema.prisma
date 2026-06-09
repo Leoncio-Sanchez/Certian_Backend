@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+﻿// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -183,7 +183,7 @@ model Reto {
   titulo              String            @db.VarChar(150)
   descripcion_problema String           @map("descripcion_problema")
   requisitos_entrega   String           @map("requisitos_entrega")
-  estado              EstadoRetoEnum?   @default(abierto)
+  estado              EstadoRetoEnum?   @default(abierto)`r`n  imagen_url          String?           @map("imagen_url") @db.VarChar(255)`r`n  documento_url       String?           @map("documento_url") @db.VarChar(255)
   created_at          DateTime?         @default(now()) @map("created_at") @db.Timestamp(6)
   
   empresa             Empresa           @relation(fields: [id_empresa], references: [id_empresa], onDelete: Cascade)
@@ -200,7 +200,7 @@ model Postulacion {
   id_postulacion   Int                   @id @default(autoincrement()) @map("id_postulacion")
   id_reto          Int                   @map("id_reto")
   id_estudiante    Int                   @map("id_estudiante")
-  repositorio_url  String?               @map("repositorio_url") @db.VarChar(255)
+  repositorio_url  String?               @map("repositorio_url") @db.VarChar(255)`r`n  solucion_url     String?               @map("solucion_url") @db.VarChar(255)
   estado           EstadoPostulacionEnum? @default(pendiente)
   feedback_tecnico String?               @map("feedback_tecnico")
   score_tech       Decimal?              @default(0.00) @map("score_tech") @db.Decimal(5, 2)
@@ -269,7 +269,7 @@ model Estudiante {
   carrera         String               @db.VarChar(100)
   ciclo           String               @db.VarChar(20)
   correo_contacto String               @map("correo_contacto") @db.VarChar(100)
-  telefono        String?              @db.VarChar(20)
+  telefono        String?              @db.VarChar(20)`r`n  foto_perfil_url String?              @map("foto_perfil_url") @db.VarChar(255)
   puntos_ranking  Int?                 @default(0) @map("puntos_ranking")
   
   usuario         Usuario              @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
@@ -342,3 +342,4 @@ model EstudianteHabilidad {
   @@map("ESTUDIANTE_HABILIDAD")
   @@schema("Estudiante")
 }
+
