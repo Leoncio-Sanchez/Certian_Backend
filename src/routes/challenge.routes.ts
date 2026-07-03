@@ -1,4 +1,4 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import { ChallengeController } from '../controllers/challenge.controller';
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
@@ -11,16 +11,23 @@ router.get('/topics', challengeController.getTopics);
 router.get('/difficulty-levels', challengeController.getDifficultyLevels);
 router.get('/:id', challengeController.getChallengeById);
 
+// Create challenge (JSON body, no files required)
+router.post('/', authMiddleware, roleMiddleware(['EMPRESA']), challengeController.createChallenge);
+
+// Create challenge with files (multipart/form-data)
 router.post(
-  '/', 
-  authMiddleware, 
-  roleMiddleware(['EMPRESA']), 
+  '/upload',
+  authMiddleware,
+  roleMiddleware(['EMPRESA']),
   upload.fields([
     { name: 'imagen', maxCount: 1 },
     { name: 'documento', maxCount: 1 }
   ]),
   challengeController.createChallenge
 );
+
+// Create topic
+router.post('/topics', authMiddleware, roleMiddleware(['EMPRESA', 'ADMIN']), challengeController.createTopic);
 
 router.put('/:id', authMiddleware, roleMiddleware(['EMPRESA']), challengeController.updateChallenge);
 router.delete('/:id', authMiddleware, roleMiddleware(['EMPRESA', 'ADMIN']), challengeController.deleteChallenge);

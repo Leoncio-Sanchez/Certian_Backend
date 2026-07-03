@@ -2,12 +2,29 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompanyController = void 0;
 const company_service_1 = require("../services/company.service");
+const storage_service_1 = require("../services/storage.service");
 const companyService = new company_service_1.CompanyService();
+const storageService = new storage_service_1.StorageService();
 class CompanyController {
     async getDashboard(req, res) {
         try {
             const stats = await companyService.getDashboardStats(req.user.id);
             res.status(200).json({ status: 'success', data: stats });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+    async uploadLogo(req, res) {
+        try {
+            const file = req.file;
+            if (!file) {
+                res.status(400).json({ status: 'error', message: 'No se envió ninguna imagen' });
+                return;
+            }
+            const logoUrl = await storageService.uploadFile(file, 'companies/logos');
+            await companyService.updateProfile(req.user.id, { logo_url: logoUrl });
+            res.status(200).json({ status: 'success', data: { logo_url: logoUrl } });
         }
         catch (error) {
             res.status(500).json({ status: 'error', message: error.message });

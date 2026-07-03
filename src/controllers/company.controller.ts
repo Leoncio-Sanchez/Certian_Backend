@@ -1,14 +1,31 @@
 import { Request, Response } from 'express';
 import { CompanyService } from '../services/company.service';
+import { StorageService } from '../services/storage.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 const companyService = new CompanyService();
+const storageService = new StorageService();
 
 export class CompanyController {
   public async getDashboard(req: AuthRequest, res: Response) {
     try {
       const stats = await companyService.getDashboardStats(req.user!.id);
       res.status(200).json({ status: 'success', data: stats });
+    } catch (error: any) {
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  public async uploadLogo(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const file = req.file;
+      if (!file) {
+        res.status(400).json({ status: 'error', message: 'No se envió ninguna imagen' });
+        return;
+      }
+      const logoUrl = await storageService.uploadFile(file, 'companies/logos');
+      await companyService.updateProfile(req.user!.id, { logo_url: logoUrl });
+      res.status(200).json({ status: 'success', data: { logo_url: logoUrl } });
     } catch (error: any) {
       res.status(500).json({ status: 'error', message: error.message });
     }

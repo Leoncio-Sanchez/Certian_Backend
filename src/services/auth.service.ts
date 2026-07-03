@@ -93,6 +93,14 @@ export class AuthService {
             puntos_ranking: 0
           }
         });
+
+        // Assign USER role
+        await prisma.usuarioRol.create({
+          data: {
+            id_usuario_rol: user.id_usuario,
+            id_rol: 3 // USER
+          }
+        });
       } else if (id_usuario_tipo === 4) { // EMPRESA
         await prisma.empresa.create({
           data: {
@@ -101,6 +109,7 @@ export class AuthService {
             ruc: finalRuc,
             logo_url: userData.logo_url || 'https://via.placeholder.com/150',
             rubro: userData.rubro || null,
+            telefono: userData.telefono || null,
             status: 'activo',
           }
         });

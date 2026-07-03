@@ -1,4 +1,4 @@
-﻿// This is your Prisma schema file,
+// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -153,6 +153,7 @@ model Empresa {
   ruc           String     @unique @db.VarChar(11)
   logo_url      String     @map("logo_url") @db.VarChar(255)
   rubro         String?    @db.VarChar(100)
+  telefono      String?    @db.VarChar(20)
   status        StatusEnum? @default(activo)
   created_at    DateTime?  @default(now()) @map("created_at") @db.Timestamp(6)
   
@@ -183,7 +184,12 @@ model Reto {
   titulo              String            @db.VarChar(150)
   descripcion_problema String           @map("descripcion_problema")
   requisitos_entrega   String           @map("requisitos_entrega")
-  estado              EstadoRetoEnum?   @default(abierto)`r`n  imagen_url          String?           @map("imagen_url") @db.VarChar(255)`r`n  documento_url       String?           @map("documento_url") @db.VarChar(255)
+  guia_pasos          String?           @map("guia_pasos")
+  estado              EstadoRetoEnum?   @default(abierto)
+  imagen_url          String?           @map("imagen_url") @db.VarChar(255)
+  documento_url       String?           @map("documento_url") @db.VarChar(255)
+  fecha_inicio        DateTime?         @map("fecha_inicio") @db.Date
+  fecha_limite        DateTime?         @map("fecha_limite") @db.Date
   created_at          DateTime?         @default(now()) @map("created_at") @db.Timestamp(6)
   
   empresa             Empresa           @relation(fields: [id_empresa], references: [id_empresa], onDelete: Cascade)
@@ -191,8 +197,23 @@ model Reto {
   nivel_dificultad    NivelDificultad   @relation(fields: [id_nivel_dificultad], references: [id_nivel_dificultad], onDelete: Restrict)
   postulaciones       Postulacion[]
   estudianteRetos     EstudianteReto[]
+  pasos               PasoReto[]
 
   @@map("RETO")
+  @@schema("Empresa")
+}
+
+model PasoReto {
+  id_paso_reto  Int      @id @default(autoincrement()) @map("id_paso_reto")
+  id_reto       Int      @map("id_reto")
+  orden         Int      @map("orden")
+  titulo        String   @db.VarChar(200)
+  descripcion   String   @db.Text
+  created_at    DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+
+  reto          Reto     @relation(fields: [id_reto], references: [id_reto], onDelete: Cascade)
+
+  @@map("PASO_RETO")
   @@schema("Empresa")
 }
 
@@ -200,7 +221,8 @@ model Postulacion {
   id_postulacion   Int                   @id @default(autoincrement()) @map("id_postulacion")
   id_reto          Int                   @map("id_reto")
   id_estudiante    Int                   @map("id_estudiante")
-  repositorio_url  String?               @map("repositorio_url") @db.VarChar(255)`r`n  solucion_url     String?               @map("solucion_url") @db.VarChar(255)
+  repositorio_url  String?               @map("repositorio_url") @db.VarChar(255)
+  solucion_url     String?               @map("solucion_url") @db.VarChar(255)
   estado           EstadoPostulacionEnum? @default(pendiente)
   feedback_tecnico String?               @map("feedback_tecnico")
   score_tech       Decimal?              @default(0.00) @map("score_tech") @db.Decimal(5, 2)
@@ -269,7 +291,8 @@ model Estudiante {
   carrera         String               @db.VarChar(100)
   ciclo           String               @db.VarChar(20)
   correo_contacto String               @map("correo_contacto") @db.VarChar(100)
-  telefono        String?              @db.VarChar(20)`r`n  foto_perfil_url String?              @map("foto_perfil_url") @db.VarChar(255)
+  telefono        String?              @db.VarChar(20)
+  foto_perfil_url String?              @map("foto_perfil_url") @db.VarChar(255)
   puntos_ranking  Int?                 @default(0) @map("puntos_ranking")
   
   usuario         Usuario              @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
@@ -326,6 +349,18 @@ model EstudianteReto {
 
   @@unique([id_estudiante, id_reto], map: "UQ_ESTUDIANTE_RETO_COMPUESTA")
   @@map("ESTUDIANTE_RETO")
+  @@schema("Estudiante")
+}
+
+model PasoEvidencia {
+  id_paso_evidencia  Int             @id @default(autoincrement()) @map("id_paso_evidencia")
+  id_estudiante_reto Int             @map("id_estudiante_reto")
+  id_paso_reto       Int             @map("id_paso_reto")
+  url_evidencia      String          @db.Text
+  comentario         String?         @db.Text
+  created_at         DateTime?       @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@map("PASO_EVIDENCIA")
   @@schema("Estudiante")
 }
 

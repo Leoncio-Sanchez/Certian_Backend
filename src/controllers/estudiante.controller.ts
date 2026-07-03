@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { EstudianteService } from '../services/estudiante.service';
+import { StorageService } from '../services/storage.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 const estudianteService = new EstudianteService();
+const storageService = new StorageService();
 
 export class EstudianteController {
   public async getDashboard(req: AuthRequest, res: Response) {
@@ -43,9 +45,40 @@ export class EstudianteController {
     }
   }
 
-  public async submitChallenge(req: AuthRequest, res: Response) {
+  public async submitChallenge(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const submission = await estudianteService.submitChallenge(req.user!.id, req.body);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const body = req.body;
+
+      // Upload evidence files to R2 if present
+      let solucion_texto_url = body.solucion_texto_url || '';
+      let repositorio_url = body.repositorio_url || '';
+
+      if (files?.['evidencia']) {
+        const urls: string[] = [];
+        for (const file of files['evidencia']) {
+          const url = await storageService.uploadFile(file, `estudiantes/evidencias/${req.user!.id}`);
+          urls.push(url);
+        }
+        solucion_texto_url = urls.join('\n'); // Join multiple file URLs with newlines
+      }
+
+      if (files?.['repositorio']) {
+        repositorio_url = await storageService.uploadFile(
+          files['repositorio'][0],
+          `estudiantes/repositorios/${req.user!.id}`
+        );
+      }
+
+      const submissionData = {
+        ...body,
+        id_reto: Number(body.id_reto),
+        solucion_texto_url: solucion_texto_url || body.solucion_texto_url || repositorio_url || '',
+        repositorio_url: repositorio_url || body.repositorio_url || '',
+        contacto_networking: body.contacto_networking === 'true' || body.contacto_networking === true,
+      };
+
+      const submission = await estudianteService.submitChallenge(req.user!.id, submissionData);
       res.status(201).json({ status: 'success', data: submission });
     } catch (error: any) {
       res.status(500).json({ status: 'error', message: error.message });

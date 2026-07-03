@@ -1,4 +1,4 @@
-﻿import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '../utils/s3Client';
 import { env } from '../config/env';
 import path from 'path';
@@ -6,7 +6,7 @@ import path from 'path';
 export class StorageService {
   public async uploadFile(file: Express.Multer.File, folder: string = 'general'): Promise<string> {
     const fileExtension = path.extname(file.originalname);
-    const fileName = \\/\-\\\;
+    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
 
     const command = new PutObjectCommand({
       Bucket: env.R2_BUCKET_NAME,
@@ -18,7 +18,7 @@ export class StorageService {
     try {
       await s3Client.send(command);
       // Return the public URL
-      return \\/\\;
+      return `${env.R2_PUBLIC_URL}/${fileName}`;
     } catch (error) {
       console.error('Error uploading to R2:', error);
       throw new Error('Failed to upload file to storage');

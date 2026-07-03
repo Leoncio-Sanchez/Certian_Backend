@@ -45,7 +45,7 @@ export class CompanyService {
 
     return prisma.reto.findMany({
       where: { id_empresa: company.id_empresa },
-      include: { tema: true, nivel_dificultad: true },
+      include: { tema: true, nivel_dificultad: true, pasos: { orderBy: { orden: 'asc' } } },
       orderBy: { created_at: 'desc' }
     });
   }
@@ -60,7 +60,9 @@ export class CompanyService {
         puntos_ranking: minPoints ? { gte: parseInt(minPoints) } : undefined,
       },
       include: {
-        usuario: { select: { username: true } }
+        usuario: { select: { username: true } },
+        formacion: true,
+        habilidades: { include: { habilidad: true } }
       }
     });
   }

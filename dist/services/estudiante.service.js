@@ -63,7 +63,7 @@ class EstudianteService {
         return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
     }
     async submitChallenge(userId, submissionData) {
-        const { id_reto, solucion_texto_url, contacto_networking, fecha_inicio, fecha_entrega } = submissionData;
+        const { id_reto, solucion_texto_url, contacto_networking, fecha_inicio, fecha_entrega, evidencias } = submissionData;
         const profile = await prisma_1.prisma.estudiante.findUnique({ where: { id_usuario: userId } });
         if (!profile)
             throw new Error('Profile not found');
@@ -83,13 +83,24 @@ class EstudianteService {
                 data: {
                     id_estudiante: profile.id_estudiante,
                     id_reto,
-                    repositorio_url: solucion_texto_url,
+                    repositorio_url: (solucion_texto_url || 'Postulación vía plataforma Certian').substring(0, 255),
                     estado: 'pendiente',
                     fecha_inicio: fecha_inicio ? new Date(fecha_inicio) : new Date(),
                     fecha_entrega: fecha_entrega ? new Date(fecha_entrega) : new Date()
                 }
             })
         ]);
+        // Create per-step evidence records
+        if (evidencias && Array.isArray(evidencias) && evidencias.length > 0) {
+            await prisma_1.prisma.pasoEvidencia.createMany({
+                data: evidencias.map((ev) => ({
+                    id_estudiante_reto: submission.id_estudiante_reto,
+                    id_paso_reto: ev.id_paso_reto,
+                    url_evidencia: ev.url_evidencia || '',
+                    comentario: ev.comentario || null,
+                }))
+            });
+        }
         return { submission, postulacion };
     }
 }

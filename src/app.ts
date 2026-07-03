@@ -24,13 +24,30 @@ export class App {
   }
 
   private initializeMiddlewares(): void {
+    // Handle CORS preflight for all routes (Express 5 compatible)
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      if (req.method === 'OPTIONS') {
+        res.sendStatus(204);
+        return;
+      }
+      next();
+    });
+
     this.app.use(cors({
-      origin: env.NODE_ENV === 'production' ? 'https://tu-dominio-frontend.com' : '*', 
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-      credentials: true
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: false
     }));
     
-    this.app.use(helmet());
+    // Helmet with relaxed CSP for cross-origin dev
+    this.app.use(helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: false,
+    }));
     this.app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -66,7 +83,7 @@ export class App {
   }
 
   public listen(): void {
-    this.app.listen(env.PORT, () => {
+    this.app.listen(env.PORT, '0.0.0.0', () => {
       console.log(`=================================`);
       console.log(`======= ENV: ${env.NODE_ENV} =======`);
       console.log(`🚀 App listening on the port ${env.PORT}`);

@@ -1,4 +1,4 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { ChallengeService } from '../services/challenge.service';
 import { StorageService } from '../services/storage.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
@@ -46,12 +46,25 @@ export class ChallengeController {
         documento_url = await storageService.uploadFile(files['documento'][0], 'challenges/docs');
       }
 
+      // Parse pasos if sent as JSON string (multipart/form-data serializes arrays as strings)
+      let pasos = req.body.pasos;
+      if (typeof pasos === 'string') {
+        try { pasos = JSON.parse(pasos); } catch { pasos = []; }
+      }
+
+      // Build guia_pasos as JSON fallback for backward compatibility
+      const guia_pasos = Array.isArray(pasos) && pasos.length > 0
+        ? JSON.stringify(pasos.map((p: any) => ({ title: p.titulo || p.title, description: p.descripcion || p.description })))
+        : '';
+
       const challengeData = {
         ...req.body,
         id_tema: Number(req.body.id_tema),
         id_nivel_dificultad: Number(req.body.id_nivel_dificultad),
         imagen_url,
-        documento_url
+        documento_url,
+        guia_pasos: req.body.guia_pasos || guia_pasos,
+        pasos
       };
 
       const newChallenge = await challengeService.createChallenge(req.user!.id, challengeData);
@@ -64,7 +77,19 @@ export class ChallengeController {
   public async updateChallenge(req: AuthRequest, res: Response): Promise<void> {
     try {
       const id = Number(req.params.id);
-      const updatedChallenge = await challengeService.updateChallenge(id, req.user!.id, req.body);
+
+      // Parse pasos if sent as JSON string
+      let pasos = req.body.pasos;
+      if (typeof pasos === 'string') {
+        try { pasos = JSON.parse(pasos); } catch { pasos = undefined; }
+      }
+
+      const updateData = {
+        ...req.body,
+        pasos
+      };
+
+      const updatedChallenge = await challengeService.updateChallenge(id, req.user!.id, updateData);
       res.status(200).json({ status: 'success', data: updatedChallenge });
     } catch (error: any) {
       res.status(500).json({ status: 'error', message: error.message });
@@ -94,6 +119,20 @@ export class ChallengeController {
     try {
       const levels = await challengeService.getDifficultyLevels();
       res.status(200).json({ status: 'success', data: levels });
+    } catch (error: any) {
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  public async createTopic(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { nombre, descripcion } = req.body;
+      if (!nombre) {
+        res.status(400).json({ status: 'error', message: 'Topic name is required' });
+        return;
+      }
+      const topic = await challengeService.createTopic(nombre, descripcion || '');
+      res.status(201).json({ status: 'success', data: topic });
     } catch (error: any) {
       res.status(500).json({ status: 'error', message: error.message });
     }

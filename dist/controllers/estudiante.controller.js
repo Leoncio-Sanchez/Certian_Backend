@@ -2,7 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EstudianteController = void 0;
 const estudiante_service_1 = require("../services/estudiante.service");
+const storage_service_1 = require("../services/storage.service");
 const estudianteService = new estudiante_service_1.EstudianteService();
+const storageService = new storage_service_1.StorageService();
 class EstudianteController {
     async getDashboard(req, res) {
         try {
@@ -44,7 +46,30 @@ class EstudianteController {
     }
     async submitChallenge(req, res) {
         try {
-            const submission = await estudianteService.submitChallenge(req.user.id, req.body);
+            const files = req.files;
+            const body = req.body;
+            // Upload evidence files to R2 if present
+            let solucion_texto_url = body.solucion_texto_url || '';
+            let repositorio_url = body.repositorio_url || '';
+            if (files?.['evidencia']) {
+                const urls = [];
+                for (const file of files['evidencia']) {
+                    const url = await storageService.uploadFile(file, `estudiantes/evidencias/${req.user.id}`);
+                    urls.push(url);
+                }
+                solucion_texto_url = urls.join('\n'); // Join multiple file URLs with newlines
+            }
+            if (files?.['repositorio']) {
+                repositorio_url = await storageService.uploadFile(files['repositorio'][0], `estudiantes/repositorios/${req.user.id}`);
+            }
+            const submissionData = {
+                ...body,
+                id_reto: Number(body.id_reto),
+                solucion_texto_url: solucion_texto_url || body.solucion_texto_url || repositorio_url || '',
+                repositorio_url: repositorio_url || body.repositorio_url || '',
+                contacto_networking: body.contacto_networking === 'true' || body.contacto_networking === true,
+            };
+            const submission = await estudianteService.submitChallenge(req.user.id, submissionData);
             res.status(201).json({ status: 'success', data: submission });
         }
         catch (error) {
