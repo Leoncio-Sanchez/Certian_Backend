@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: certian-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        value: certian01
+      - key: R2_ENDPOINT
+        value: https://1ebe02321f749cc3fcc09f6e9cb43400.r2.cloudflarestorage.com
+      - key: R2_PUBLIC_URL
+        value: https://pub-e7db5cf2d1b84263a6a85bce7dc4c675.r2.dev
