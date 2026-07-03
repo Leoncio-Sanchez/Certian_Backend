@@ -8,7 +8,7 @@ RUN npm ci --include=dev
 
 COPY . .
 
-RUN npx prisma generate
+RUN npx prisma generate --schema=src/prisma/schema.prisma
 RUN npm run build
 
 # ---- Production Stage ----
